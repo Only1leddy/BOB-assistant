@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistant Control</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        button { padding: 10px; margin: 10px; }
+        #assistantResponse { margin-top: 20px; }
+        #shellOutput { margin-top: 20px; white-space: pre-wrap; background-color: #f4f4f4; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>   
+<body>
+
+    <h1>B.O.B assitant (Barely Operational Butler)</h1>
+    
+   
+    <div>
+        <h3>Send Message to Assistant:</h3>
+        
+        <input type="text" id="messageInput" placeholder="Type your message">
+        <button2 onclick="sendMessage()">Send Message / Comite heating</button2>
+        <button onclick="startListening()">🎤 Speak</button>
+  
+    </div>
+    <br>
+    <div id="assistantResponse">
+        <h3>Assistant Response:</h3>
+    <div id="responseText" style="font-size: 1.2em; font-weight: bold; color: #007BFF;"></div>
+    <br>
+    </div>
+
+    <!-- Command Buttons -->
+    <div id="command-buttons">
+        <button class="btn" onclick="insertText('music')">Play Music</button>
+        <button class="btn" onclick="insertText('panic mode')">Panic Mode</button>
+        <button class="btn" onclick="insertText('panic off')">Panic Off</button>
+        <button class="btn" onclick="insertText('outside camera')">Outside Camera</button>
+        <button class="btn" onclick="insertText('outside shut')">Close Outside Camera</button>
+        <button class="btn" onclick="insertText('what is the time')">What is the time</button>
+        <button class="btn" onclick="insertText('fuck')">Fuck</button>
+        <button class="btn" onclick="insertText('add to list')">Add to List</button>
+        <button class="btn" onclick="insertText('what\'s on list')">What's on List</button>
+        <button class="btn" onclick="insertText('take off list')">Take off List</button>
+        <button class="btn" onclick="insertText('chatbot')">Chatbot</button>
+        <button class="btn" onclick="insertText('set temp')">Set Temp</button>
+        <button class="btn" onclick="insertText('heating settings')">Heating Settings</button>
+        <button class="btn" onclick="insertText('heat on')">Heat On</button>
+        <button class="btn" onclick="insertText('heat off')">Heat Off</button>
+        <button class="btn" onclick="insertText('temp')">Temp</button>
+        <button class="btn" onclick="insertText('look around')">Look Around</button>
+        <button class="btn" onclick="insertText('take picture')">Take Picture</button>
+        <button class="btn" onclick="insertText('record video')">Record Video</button>
+        <button class="btn" onclick="insertText('show pic')">Show Pic</button>
+        <button class="btn" onclick="insertText('open video')">Open Video</button>
+        <button class="btn" onclick="insertText('close pic')">Close Pic</button>
+        <button class="btn" onclick="insertText('open pic')">Open Pic</button>
+        <button class="btn" onclick="insertText('full screen')">Full Screen</button>
+        <button class="btn" onclick="insertText('next please')">Next Please</button>
+        <button class="btn" onclick="insertText('back please')">Back Please</button>
+        <button class="btn" onclick="insertText('play')">Play</button>
+        <button class="btn" onclick="insertText('pause')">Pause</button>
+        <button class="btn" onclick="insertText('rename image')">Rename Image</button>
+        <button class="btn" onclick="insertText('louder')">Louder</button>
+        <button class="btn" onclick="insertText('quite')">Quite</button>
+        <button class="btn" onclick="insertText('mute')">Mute</button>
+        <button class="btn" onclick="insertText('close video')">Close Video</button>
+    </div>
+    <div id="shellOutput">
+        <h3>Assistant Shell Output:</h3>
+        <pre id="shellText">{{ shell_output }}</pre>  <!-- Insert initial shell output from Flask -->
+    </div>
+
+    <h1>Heating Control</h1>
+
+    <div>
+        <h3>Heating Status: <span id="heatingStatus">{{ heating }}</span></h3>
+        <button onclick="toggleHeating()">Toggle Heating</button>
+    </div>
+    
+    <div>
+        <h3>Set Temperature: <span id="currentTemp">{{ temperature }}</span></h3>
+        <input type="number" id="tempInput" placeholder="Enter temperature (°C)">
+        <button onclick="setTemperature()">Set Temperature</button>
+    </div>
+
+    
+    
+    <script>
+        // Get the correct base URL dynamically
+        const BASE_URL = window.location.origin;
+
+        function fetchStatus() {
+            fetch(`${BASE_URL}/get_status`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('heatingStatus').innerText = data.heating;
+                    document.getElementById('currentTemp').innerText = data.temperature;
+                    document.getElementById('heaterStatus').innerText = data.heater ? "On" : "Off";
+                });
+        }
+
+        function toggleHeating() {
+            fetch(`${BASE_URL}/toggle_heating`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    fetchStatus();  // Refresh status
+                });
+        }
+
+        function setTemperature() {
+            const temp = document.getElementById('tempInput').value;
+            if (temp) {
+                fetch(`${BASE_URL}/set_temperature`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ temperature: parseFloat(temp) })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    fetchStatus();  // Refresh status
+                });
+            }
+        }
+        function sendMessage() {
+            const message = document.getElementById('messageInput').value.trim();
+
+            if (message !== "") {
+                const payload = { message };
+
+                console.log("📤 Sending to Flask:", payload);
+
+                fetch(`${BASE_URL}/send_message`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('responseText').innerText = data.response || "No response.";
+                    document.getElementById('messageInput').value = '';  // Clear input field
+                    fetchShellOutput();  // Update shell output box
+                })
+                .catch(error => {
+                    console.error("❌ Error sending message:", error);
+                    document.getElementById('responseText').innerText = "Failed to send message.";
+                });
+            }
+        }
+
+
+        function fetchShellOutput() {
+            fetch(`${BASE_URL}/get_shell_output`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update the full shell output box
+                    document.getElementById('shellText').innerText = data.shell_output;
+
+                    // Also show the last printed response at the top
+                    const lines = data.shell_output.trim().split('\n');
+                    const lastLine = lines[lines.length - 1];
+                    if (lastLine) {
+                        document.getElementById('responseText').innerText = lastLine;
+                    }
+                });
+        }
+
+        function fetchHeaterStatus() {
+            fetch(`${BASE_URL}/get_status`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('heaterStatus').innerText = data.heater ? "On" : "Off";
+                })
+                .catch(error => console.error("Error:", error));
+        }
+
+        // Function to insert selected text into message box
+        function insertText(command) {
+            document.getElementById("messageInput").value = command;
+        }
+        function startListening() {
+            // Browser Speech Recognition API
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Speech recognition not supported in this browser.");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = "en-GB";  // Or "en-US"
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                document.getElementById("responseText").innerText = "🎙️ Listening...";
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase();
+                console.log("🎧 Heard:", transcript);
+                document.getElementById("messageInput").value = transcript;
+                sendMessage();
+            };
+
+            recognition.onerror = (event) => {
+                console.error("🎤 Error:", event.error);
+                document.getElementById("responseText").innerText = "❌ Mic error: " + event.error;
+            };
+
+            recognition.start();
+        }
+
+        // Refresh the values every 5 seconds
+        setInterval(fetchStatus, 5000);
+        setInterval(fetchShellOutput, 5000);
+    </script>
+</body>
+{% endblock %}
+</html>

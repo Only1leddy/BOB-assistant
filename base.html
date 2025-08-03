@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>{% block title %}BOBV7{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>LDMEC</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('homey') }}">Home</a></li>
+                <li><a href="{{ url_for('links') }}">links</a></li>
+                
+                <li><a href="{{ url_for('output') }}">output</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <p>&copy; 2025/06 LDMEC</p>
+    </footer>
+</body>
+</html>
