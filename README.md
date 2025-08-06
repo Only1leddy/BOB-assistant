@@ -1,6 +1,3 @@
-###-- B.O.B, BARELY OPERATIONAL BUTLER --##
-###---- Made buy LDMEC (LDMEC.CO.UK) ----## 
-###########################################
 ## LDMEC - LDMEC - LDMEC - LDMEC - LDMEC ##
 ###########################################
 
